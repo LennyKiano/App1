@@ -37,6 +37,9 @@ and at the same time the title textView is fading in by setting the intial alpha
     *- There is also a check to see if there is active internet
     
     **END OF SOLUTION APP1**
+  NOTE: incase of anyting missed out refer to the project code as I have done my best to comment what is going on and the logic
+  NOTE: The app design not optimized for hdpi screen sizes as it is just a test and not a real world application
+  NOTE: Please ignore the Mysingleton java class. As I was using it to test by forgot to delete it
 
 FOR THE SOLUTION OF APP 2 READ THE README FILE IN MY APP2 REPO HERE: https://github.com/LennyKiano/App2
 
