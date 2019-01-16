@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">App1</string>
+    <string name="app1logo">App1 Star Logo</string>
+    <string name="launcherTitle">APP 1</string>
+    <string name="welcome_message">Hello Inter Intel to App1. Test out the app by tapping the buttons and viewing the
+        response
+    </string>
+    <string name="show_notification">Show Notification</string>
+    <string name="do_bg_service">Do Background Service</string>
+</resources>
