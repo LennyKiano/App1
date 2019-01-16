@@ -38,7 +38,7 @@ and at the same time the title textView is fading in by setting the intial alpha
     
     **END OF SOLUTION APP1**
 
-FOR THE SOLUTION OF APP 2 READ THE README FILE IN MY APP2 REPO
+FOR THE SOLUTION OF APP 2 READ THE README FILE IN MY APP2 REPO HERE: https://github.com/LennyKiano/App2
 
 //Happing Codding
 
