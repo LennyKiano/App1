@@ -15,16 +15,18 @@ import android.os.Bundle
 import android.os.CountDownTimer
 import android.widget.Toast
 import android.support.design.widget.Snackbar
+import android.util.Log
 import android.view.View
-import com.android.volley.Request
-import com.android.volley.Response
-import com.android.volley.VolleyError
+import android.view.textclassifier.TextLinks
+import com.android.volley.*
+import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
 
 import kotlinx.android.synthetic.main.activity_main.*
 import org.json.JSONException
 import org.json.JSONObject
+import kotlin.math.log
 
 class MainActivity : AppCompatActivity() {
 
@@ -33,15 +35,20 @@ class MainActivity : AppCompatActivity() {
     val notificationPendingInent = 1
     val notificationID = 101
     private val channelID = "com.leonkianoapps.leonk.app1"
-    lateinit var notificationManager : NotificationManager
-    lateinit var notificationChannel : NotificationChannel
-    lateinit var builder : Notification.Builder
+    private lateinit var notificationManager: NotificationManager
+    private lateinit var notificationChannel: NotificationChannel
+    private lateinit var builder: Notification.Builder
     private val notificationMessage = "You have been notified by App1"
+
+    private val requestTag1 = "requestTag1"
+    private val requestTag2 = "requestTag2"
+
+    private lateinit var requestQueue : RequestQueue
+
 
     //Networking Variable
 
-    val downloadURL = "https://httpbin.org/get"
-
+    private val downloadURL = "https://httpbin.org/get"
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -55,8 +62,6 @@ class MainActivity : AppCompatActivity() {
         showNotificationButton.setOnClickListener { showNotification() }
 
         doBackgroundServiceButton.setOnClickListener { doService() }
-
-
 
 
     }
@@ -83,13 +88,18 @@ class MainActivity : AppCompatActivity() {
 
     private fun startNetworking() {
 
+        //get Status Code
+
+        getStatusCode()
+
+
         //progress bar
 
         progress_circular.visibility = View.VISIBLE
 
         //Using Volley Networking Lib
 
-        val requestQueue = Volley.newRequestQueue(this@MainActivity)
+         requestQueue = Volley.newRequestQueue(this@MainActivity)
 
         val stringRequest = StringRequest(
             Request.Method.GET, downloadURL,
@@ -121,17 +131,73 @@ class MainActivity : AppCompatActivity() {
                 requestQueue.stop()
             })
 
+        stringRequest.tag = requestTag1
+
         requestQueue.add(stringRequest)
+
+
+
+    }
+
+    override fun onPause() {
+        super.onPause()
+
+        requestQueue.cancelAll(requestTag1)
+        requestQueue.cancelAll(requestTag2)
+
+    }
+
+    override fun onStop() {
+        super.onStop()
+
+        requestQueue.cancelAll(requestTag1)
+
+        requestQueue.cancelAll(requestTag2)
+
+
+
+    }
+
+    private fun getStatusCode() {
+
+
+      val networkResponseRequest = NetworkResponseRequest(Request.Method.GET, downloadURL, Response.Listener { response ->
+
+            val code = response.statusCode.toString()
+
+            val stringResponse = NetworkResponseRequest.parseToString(response)
+
+            Log.d("MainActivity Code", "Status code $code")
+
+            Log.d("MainActivity stringRes", "response code $stringResponse")
+
+
+        },
+            Response.ErrorListener { }
+        )
+
+        requestQueue = Volley.newRequestQueue(this@MainActivity)
+
+        networkResponseRequest.tag = requestTag2
+
+        requestQueue.add(networkResponseRequest)
+
 
 
     }
 
     private fun showNotification() {
 
-        val intent = Intent(applicationContext,MainActivity::class.java)
-                        .setFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT)// when the notification is tapped, it will bring the activity fourth to the user
 
-        val pendingIntent = PendingIntent.getActivity(this@MainActivity,notificationPendingInent,intent,PendingIntent.FLAG_UPDATE_CURRENT)
+        val intent = Intent(applicationContext, MainActivity::class.java)
+            .setFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT)// when the notification is tapped, it will bring the activity fourth to the user
+
+        val pendingIntent = PendingIntent.getActivity(
+            this@MainActivity,
+            notificationPendingInent,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT
+        )
 
 
 
@@ -140,7 +206,8 @@ class MainActivity : AppCompatActivity() {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {            //Notification channel is available from sdk 26 hence the check
 
-            notificationChannel = NotificationChannel(channelID,notificationMessage,NotificationManager.IMPORTANCE_HIGH)
+            notificationChannel =
+                    NotificationChannel(channelID, notificationMessage, NotificationManager.IMPORTANCE_HIGH)
             notificationChannel.enableLights(true)  //if device has notification light
             notificationChannel.lightColor = Color.CYAN
             notificationChannel.enableVibration(false)
@@ -150,21 +217,21 @@ class MainActivity : AppCompatActivity() {
                 .setContentTitle("App1 Notification")
                 .setContentText(notificationMessage)
                 .setSmallIcon(R.drawable.star_logo_blue)
-                .setLargeIcon(BitmapFactory.decodeResource(this.resources,R.drawable.star_logo_blue))
+                .setLargeIcon(BitmapFactory.decodeResource(this.resources, R.drawable.star_logo_blue))
                 .setContentIntent(pendingIntent)
 
 
-        }else{
+        } else {
 
             builder = Notification.Builder(this@MainActivity)
                 .setContentTitle("App1 Notification")
                 .setContentText(notificationMessage)
                 .setSmallIcon(R.drawable.star_logo_blue)
-                .setLargeIcon(BitmapFactory.decodeResource(this.resources,R.drawable.star_logo_blue))
+                .setLargeIcon(BitmapFactory.decodeResource(this.resources, R.drawable.star_logo_blue))
                 .setContentIntent(pendingIntent)
         }
 
-        notificationManager.notify(notificationID,builder.build())
+        notificationManager.notify(notificationID, builder.build())
 
         val messageInfo = "Check Your statusBar for the notification"
 
@@ -174,17 +241,16 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    private fun showSnack(messageInfo:String){
+    private fun showSnack(messageInfo: String) {
 
-        val snack = Snackbar.make(coordinatorLayout,messageInfo,Snackbar.LENGTH_LONG)
+        val snack = Snackbar.make(coordinatorLayout, messageInfo, Snackbar.LENGTH_LONG)
             .setAction("OKAY", View.OnClickListener {
-        })
+            })
         snack.show()
 
     }
 
-    private fun scheduledTimer(){
-
+    private fun scheduledTimer() {
 
 
         object : CountDownTimer(5000, 1000) {
@@ -195,7 +261,7 @@ class MainActivity : AppCompatActivity() {
 
             override fun onFinish() {
 
-               startNetworking()
+                startNetworking()
 
 
             }
