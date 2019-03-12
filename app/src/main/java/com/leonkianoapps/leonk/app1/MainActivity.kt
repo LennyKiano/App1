@@ -42,8 +42,11 @@ class MainActivity : AppCompatActivity() {
 
     private val requestTag1 = "requestTag1"
     private val requestTag2 = "requestTag2"
+    private val jsonObjectRequest1 = "jsonObjectRequest1"
 
-    private lateinit var requestQueue : RequestQueue
+    private lateinit var requestQueue: RequestQueue
+
+    private lateinit var timer : CountDownTimer
 
 
     //Networking Variable
@@ -75,13 +78,58 @@ class MainActivity : AppCompatActivity() {
 
         if (activeNetworkInfo != null && activeNetworkInfo.isConnected) {  //There is internet connection
 
-            startNetworking()
+//            startNetworking()
+            startNetworking2()
 
         } else {
 
             showSnack("Make sure you have active internet connection")
 
         }
+
+
+    }
+
+    private fun startNetworking2() {
+
+        //get Status Code
+
+        getStatusCode()
+
+        //progress bar
+
+        progress_circular.visibility = View.VISIBLE
+
+        //using Volley Lib with JsonObjectRequest
+
+        requestQueue = Volley.newRequestQueue(this@MainActivity)
+
+        val jsonObjectRequest = JsonObjectRequest(Request.Method.GET,
+            downloadURL, Response.Listener { response ->
+
+                val serverResponse = response.getString("origin")  //getting the string from the Json Object
+
+                progress_circular.visibility = View.INVISIBLE
+
+                showToast(serverResponse)
+
+                scheduledTimer()
+
+
+            }
+            , Response.ErrorListener {
+
+                showToast("Error: Something Went Wrong")
+
+                requestQueue.stop()
+
+            }
+        )
+
+
+        jsonObjectRequest.tag =jsonObjectRequest1
+
+        requestQueue.add(jsonObjectRequest)
 
 
     }
@@ -99,7 +147,7 @@ class MainActivity : AppCompatActivity() {
 
         //Using Volley Networking Lib
 
-         requestQueue = Volley.newRequestQueue(this@MainActivity)
+        requestQueue = Volley.newRequestQueue(this@MainActivity)
 
         val stringRequest = StringRequest(
             Request.Method.GET, downloadURL,
@@ -115,7 +163,7 @@ class MainActivity : AppCompatActivity() {
 
                     progress_circular.visibility = View.INVISIBLE
 
-                    Toast.makeText(applicationContext,serveResponse,Toast.LENGTH_LONG).show()  //Toast of server response
+                    showToast(serveResponse)  //Toast of server response
 
                     scheduledTimer()   //start 5 second count down to do another network request
 
@@ -127,14 +175,13 @@ class MainActivity : AppCompatActivity() {
 
             }, Response.ErrorListener {
 
-                Toast.makeText(applicationContext, "Error something is wrong", Toast.LENGTH_LONG).show()
+                showToast("Error: something is wrong")
                 requestQueue.stop()
             })
 
         stringRequest.tag = requestTag1
 
         requestQueue.add(stringRequest)
-
 
 
     }
@@ -144,6 +191,9 @@ class MainActivity : AppCompatActivity() {
 
         requestQueue.cancelAll(requestTag1)
         requestQueue.cancelAll(requestTag2)
+        requestQueue.cancelAll(jsonObjectRequest1)
+
+        timer.cancel()
 
     }
 
@@ -154,6 +204,11 @@ class MainActivity : AppCompatActivity() {
 
         requestQueue.cancelAll(requestTag2)
 
+        requestQueue.cancelAll(jsonObjectRequest1)
+
+        timer.cancel()
+
+
 
 
     }
@@ -161,27 +216,27 @@ class MainActivity : AppCompatActivity() {
     private fun getStatusCode() {
 
 
-      val networkResponseRequest = NetworkResponseRequest(Request.Method.GET, downloadURL, Response.Listener { response ->
+        val networkResponseRequest =
+            NetworkResponseRequest(Request.Method.GET, downloadURL, Response.Listener { response ->
 
-            val code = response.statusCode.toString()
+                val code = response.statusCode.toString()
 
-            val stringResponse = NetworkResponseRequest.parseToString(response)
+                val stringResponse = NetworkResponseRequest.parseToString(response)
 
-            Log.d("MainActivity Code", "Status code $code")
+                Log.d("MainActivity Code", "Status code $code")
 
-            Log.d("MainActivity stringRes", "response code $stringResponse")
+                Log.d("MainActivity stringRes", "response code $stringResponse")
 
 
-        },
-            Response.ErrorListener { }
-        )
+            },
+                Response.ErrorListener { }
+            )
 
         requestQueue = Volley.newRequestQueue(this@MainActivity)
 
         networkResponseRequest.tag = requestTag2
 
         requestQueue.add(networkResponseRequest)
-
 
 
     }
@@ -207,7 +262,7 @@ class MainActivity : AppCompatActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {            //Notification channel is available from sdk 26 hence the check
 
             notificationChannel =
-                    NotificationChannel(channelID, notificationMessage, NotificationManager.IMPORTANCE_HIGH)
+                NotificationChannel(channelID, notificationMessage, NotificationManager.IMPORTANCE_HIGH)
             notificationChannel.enableLights(true)  //if device has notification light
             notificationChannel.lightColor = Color.CYAN
             notificationChannel.enableVibration(false)
@@ -240,6 +295,12 @@ class MainActivity : AppCompatActivity() {
 
     }
 
+    private fun showToast(message: String){
+
+        Toast.makeText(this@MainActivity,message,Toast.LENGTH_LONG).show()
+
+    }
+
 
     private fun showSnack(messageInfo: String) {
 
@@ -252,20 +313,20 @@ class MainActivity : AppCompatActivity() {
 
     private fun scheduledTimer() {
 
-
-        object : CountDownTimer(5000, 1000) {
-            override fun onTick(millisUntilFinished: Long) {
-
-                //do nothing
-            }
-
+        timer = object: CountDownTimer(5000,1000){
             override fun onFinish() {
 
-                startNetworking()
-
+                //do nothing
 
             }
-        }.start()
+
+            override fun onTick(p0: Long) {
+
+                startNetworking2()
+            }
+
+
+        } .start()
 
     }
 }
