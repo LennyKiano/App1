@@ -1,10 +1,8 @@
 package com.leonkianoapps.leonk.app1
 
-import android.app.Notification
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.PendingIntent
+import android.app.*
 import android.content.Context
+import android.content.DialogInterface
 import android.content.Intent
 import android.graphics.BitmapFactory
 import android.graphics.Color
@@ -46,7 +44,7 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var requestQueue: RequestQueue
 
-    private lateinit var timer : CountDownTimer
+    private lateinit var timer: CountDownTimer
 
 
     //Networking Variable
@@ -127,7 +125,7 @@ class MainActivity : AppCompatActivity() {
         )
 
 
-        jsonObjectRequest.tag =jsonObjectRequest1
+        jsonObjectRequest.tag = jsonObjectRequest1
 
         requestQueue.add(jsonObjectRequest)
 
@@ -207,8 +205,6 @@ class MainActivity : AppCompatActivity() {
         requestQueue.cancelAll(jsonObjectRequest1)
 
         timer.cancel()
-
-
 
 
     }
@@ -295,9 +291,9 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    private fun showToast(message: String){
+    private fun showToast(message: String) {
 
-        Toast.makeText(this@MainActivity,message,Toast.LENGTH_LONG).show()
+        Toast.makeText(this@MainActivity, message, Toast.LENGTH_LONG).show()
 
     }
 
@@ -313,7 +309,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun scheduledTimer() {
 
-        timer = object: CountDownTimer(5000,1000){
+        timer = object : CountDownTimer(5000, 1000) {
             override fun onFinish() {
 
                 //do nothing
@@ -326,7 +322,7 @@ class MainActivity : AppCompatActivity() {
             }
 
 
-        } .start()
+        }.start()
 
     }
 }
